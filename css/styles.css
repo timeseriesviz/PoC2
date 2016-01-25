@@ -1,0 +1,114 @@
+body {
+	background-color: #ffffff;
+	overflow-y: hidden;
+	font-family: Helvetica, Arial, Sans-Serif;
+	font-size: 2em;
+	color:  #008B8B;
+}
+
+#beaver{
+
+  float : left;
+  width : 60%;
+  height : 98%;
+  background: none;
+/*  border: 1px solid black;*/
+	overflow-y: hidden;
+	overflow-x: hidden;
+}
+
+#averageTeeth{
+  position:  absolute;
+  width : 0.5%;
+  height :  7%;
+  border : 1px  solid white;
+  background-color:  white;
+  top :  40.7%;
+  left: 33.5%;
+}
+
+#todayTeeth{
+  position:  absolute;
+  width : 0.5%;
+  height :  7%;
+  border : 1px  solid white;
+  background-color:  white;
+  top :  40.7%;
+  left: 34.5%;
+}
+
+#beaverImage{
+  position: relative;
+/*  border : 2px  solid brown;*/
+}
+
+
+.ui-slider-horizontal .ui-state-default {
+width:10%;
+height:300%;
+background-color: inherit;
+background:url('slider1.png') no-repeat; overflow: auto;*/
+position:absolute;
+top: -10px;
+border-style:none;
+box-shadow:none ;
+outline:none;
+}
+
+#dataCanvas{
+	position: absolute;
+	border: 1px solid  black;
+	width : 400;
+	height : 50;
+	visibility: hidden;
+
+}
+
+#dataCanvasInit{
+	position: absolute;
+	border: 1px solid  black;
+	width : 400;
+	height : 50;
+	visibility: hidden;
+
+}
+
+
+#slider1 {
+	position:  absolute;
+	top: 50%;
+	right: 10%;
+	float: right;
+	width: 400;
+	height : 50;
+    font-size: 40%;
+  /*background-image: url('http://abkldesigns.com/trn4.gif');*/
+}
+
+#startDate
+{
+	position:  absolute;
+	top: 61.5%;
+	right: 40%;
+	float: right;
+	font-size: 40%;
+}
+
+#dataPlot
+{
+	top: 20%;
+	float: right;
+	position:  relative;
+ /*	visibility: hidden; */
+	width: 30%;
+	height : 70%;
+/*	border: 1px solid  black;*/
+}
+
+
+#audioButton
+{
+   position: absolute;
+	 top: 20%;
+	 left:45%;
+}
