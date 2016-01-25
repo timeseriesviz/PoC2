@@ -1,0 +1,507 @@
+
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <!--link type="text/css" href="themes/ui.all.css" rel="stylesheet" />
+  <link rel="stylesheet" href="js/jquery-ui-1.11.2.custom"-->
+
+  <link rel="stylesheet" type="text/css" href="js/jquery-ui-1.11.4.custom/jquery-ui.min.css">
+  <link rel="stylesheet" type="text/css" href="css/styles.css">
+  <script type="text/javascript" src="js/jquery-ui-1.11.4.custom/external/jquery/jquery.js"></script>
+  <script type="text/javascript" src="js/jquery-ui-1.11.4.custom/jquery-ui.min.js"></script>
+  <script type="text/javascript">
+
+  var DATA={};
+
+  /* audio connection */
+var WelcomeAudio;
+var moretoday;
+var moreother;
+var lesstoday;
+var lessother;
+var sametoday;
+var sameother;
+var AudioFlag = 0;
+var tend, tavg;
+
+ var myArray = Array(60, 35, 20, 50, 70, 55, 90, 35, 5,100,
+                    60, 35, 20, 50, 70, 55, 90, 35, 5,100);
+
+ //var  myArray= Array();
+
+  var index = 0;
+  var NewValue = 0.0;
+  var currentIndex1 = 0;
+  var currentAverageHeight = '';
+  var dummyCalc = 0;
+  var dummyIndex = 0;
+  function init(){
+
+    $.getJSON('data.json', function (data) {
+
+      for(var i in data)
+      {
+        //var prop = (data[i].Date).toString();
+        DATA[i] = data[i];
+        var text = data[i].Date;
+        var day = data[i].Day;
+        var Percentage = data[i].Percentage;
+        //myArray[i] = DATA[i].Percentage;
+
+      }
+
+      document.getElementById('startDate').innerHTML = DATA[0].Date;
+    });
+
+    console.log(myArray);
+    console.log(DATA);
+
+    tend = (myArray[myArray.length-1]*0.07).toString()+'%';
+    calculateAverage(myArray[myArray.length-1]);
+
+    $('#todayTeeth').animate({height : tend });
+    console.log("Tend  "+  tend + ":: TAvg " +tavg);
+
+
+    /* audio button */
+  WelcomeAudio = new Audio('sounds/introduction.mp3');
+  WelcomeAudio.id = 'welcome';
+  moretoday = new Audio('sounds/moretoday.m4a');
+  moretoday.id = 'moretoday';
+  lesstoday = new Audio('sounds/lesstoday.m4a');
+  lesstoday.id = 'lesstoday';
+  sametoday = new Audio('sounds/sametoday.m4a');
+  sametoday.id = 'sametoday';
+  moreother = new Audio('sounds/moreother.m4a');
+  moreother.id = 'moreother';
+  lessother = new Audio('sounds/lessother.m4a');
+  lessother.id = 'lessother';
+  sameother = new Audio('sounds/sameother.m4a');
+  sameother.id = 'sameother';
+
+  initCanvasInit();
+  var canvas = document.getElementById('dataCanvasInit');
+  document.getElementById('slider1').style.background = "url(" + canvas.toDataURL() + ")";
+
+
+      var sliderURL = 'images/slider.png';
+      $('#slider1').slider();
+      $( "#slider1" ).slider({
+          min: 0,
+          max: 19,
+          animate: "slow"
+      });
+
+        document.getElementById("audioButton").addEventListener("click", ResetPrototype);
+
+      var tooltip = $('<div class="ui-slider-tooltip" />').css({
+                                                         position: 'absolute',
+                                                         top: 90,
+                                                         left: 0,
+                                                         width: 20,
+                                                         height: 20
+                                                        });
+
+      $( "#slider1" ).slider({
+        slide: function(event, ui)
+        {
+          $( ".selector" ).slider( "values", 0 );
+          currentIndex1 = ui.value;
+          currentTodayHeight = 0;
+          dummyIndex = ui.value;
+          dummyCalc = ((calculateAverage(ui.value) * 7) / 100);
+          currentAverageHeight = dummyCalc.toString();
+          currentAverageHeight=currentAverageHeight+'%';
+        //  document.getElementById('averageTeeth').style.height = currentAverageHeight;
+      //   $('#averageTeeth').animate({height : currentAverageHeight });
+      //   console.log("Average HEight -> "+ currentAverageHeight);
+
+         var percentage  = DATA[ui.value].Percentage;
+      //   console.log("Percentage::: "+ percentage + "| My array value :::  " + myArray[ui.value] );
+         var currentTodayHeight = [( percentage * 7) / 100].toString();
+         currentTodayHeight=currentTodayHeight+'%';
+        // document.getElementById('todayTeeth').style.height = currentTodayHeight;
+        // $('#todayTeeth').animate({height : currentTodayHeight });
+
+       if(Math.abs(currentTodayHeight - currentAverageHeight) < 2)
+       {
+         if(currentAverageHeight > currentTodayHeight )
+         {
+           currentTodayHeight -=3;
+         }
+         else {
+           currentAverageHeight -=3;
+         }
+       }
+
+
+         SetCanvasBackground(ui.value);
+                             var text = DATA[ui.value].Date;
+                             if(DATA[ui.value].Date == "18-Dec")
+                             {
+                               text = "Today";
+                             }
+        $(ui.handle).find('.ui-slider-tooltip').text(text+'\n'+DATA[ui.value].Day);
+
+        /* audio flag settings */
+
+       } // end of slide
+    ,
+    stop: function(event, ui)
+    {
+      var currentAverageHeight = [((calculateAverage(ui.value)) * 10) / 100];
+    //  document.getElementById('averageTeeth').style.height = currentAverageHeight;
+
+
+       var percentage  = DATA[ui.value].Percentage;
+      var currentTodayHeight = [( percentage * 10) / 100].toString();
+      //document.getElementById('todayTeeth').style.height = currentTodayHeight;
+
+      if(Math.abs(currentTodayHeight - currentAverageHeight) < 2)
+      {
+        if(currentAverageHeight > currentTodayHeight )
+        {
+          currentTodayHeight -=1;
+        }
+        else if(currentAverageHeight ==  currentTodayHeight )
+        {
+
+        }
+        else {
+          currentAverageHeight -=1;
+        }
+      }
+
+      currentTodayHeight = currentTodayHeight.toString()+'%';
+      currentAverageHeight = currentAverageHeight.toString()+'%';
+
+      console.log("In stop function:: currentAverageHeight: " +currentAverageHeight);
+      console.log("In stop function:: curren total : " +currentTodayHeight );
+      $('#averageTeeth').animate({height : currentAverageHeight });
+      $('#todayTeeth').animate({height : currentTodayHeight });
+
+      SetCanvasBackground(ui.value);
+//$(ui.handle).find('.ui-slider-tooltip').hide();
+
+  },  //end of stop
+                             change: function(event, ui)
+                             {
+                             $( ".selector" ).slider( "values", 0 );
+                             currentIndex1 = ui.value;
+                             currentTodayHeight = 0;
+                             dummyIndex = ui.value;
+                             dummyCalc = ((calculateAverage(ui.value) * 7) / 100);
+                             currentAverageHeight = dummyCalc.toString();
+                             currentAverageHeight=currentAverageHeight;
+                             //  document.getElementById('averageTeeth').style.height = currentAverageHeight;
+
+                             //   console.log("Average HEight -> "+ currentAverageHeight);
+
+                             var percentage  = DATA[ui.value].Percentage;
+                             //   console.log("Percentage::: "+ percentage + "| My array value :::  " + myArray[ui.value] );
+                             var currentTodayHeight = [( percentage * 7) / 100].toString();
+                             currentTodayHeight=currentTodayHeight;
+                             // document.getElementById('todayTeeth').style.height = currentTodayHeight;
+
+
+                             console.log("In CHECK BEFORE function:: currentAverageHeight: " +currentAverageHeight);
+                             console.log("In CHECK BEFORE function:: curren total : " +currentTodayHeight );
+                             if(Math.abs(currentTodayHeight - currentAverageHeight) < 2)
+                             {
+                               if(currentAverageHeight > currentTodayHeight )
+                               {
+                                 currentTodayHeight -=1;
+                               }
+                               else if(currentAverageHeight ==  currentTodayHeight )
+                               {
+
+                               }
+                               else {
+                                 currentAverageHeight -=1;
+                               }
+
+                             }
+
+                             currentTodayHeight = currentTodayHeight.toString()+'%';
+                             currentAverageHeight = currentAverageHeight.toString()+'%';
+
+                             console.log("In CHECK AFTER function:: currentAverageHeight: " +currentAverageHeight);
+                             console.log("In CHECK AFTER function:: curren total : " +currentTodayHeight );
+                             $('#averageTeeth').animate({height : currentAverageHeight });
+                             $('#todayTeeth').animate({height : currentTodayHeight });
+
+                             SetCanvasBackground(ui.value);
+                             var text = DATA[ui.value].Date;
+                             if(DATA[ui.value].Date == "18-Dec")
+                             {
+                               text = "Today";
+                             }
+                             $(ui.handle).find('.ui-slider-tooltip').text(text+'\n'+DATA[ui.value].Day);
+
+                             /* audio settings */
+                                 WelcomeAudio.pause();
+                                   WelcomeAudio.currentTime = 0;
+                                   moretoday.pause();
+                                   moretoday.currentTime = 0;
+                                   lesstoday.pause();
+                                   lesstoday.currentTime = 0;
+                                   sametoday.pause();
+                                   sametoday.currentTime = 0;
+                                   moreother.pause();
+                                   moreother.currentTime = 0;
+                                   lessother.pause();
+                                   lessother.currentTime = 0;
+                                   sameother.pause();
+                                   sameother.currentTime = 0;
+
+                                   AudioFlag =-1;
+
+
+                                   if(currentAverageHeight < currentTodayHeight && ui.value == myArray[myArray.length-1])
+                                 {
+                                   AudioFlag = 1;
+                                 }
+
+                                 if(currentAverageHeight == currentTodayHeight && ui.value == myArray[myArray.length-1])
+                                 {
+                                   AudioFlag = 2;
+                                 }
+
+                                 if(currentAverageHeight > currentTodayHeight && ui.value == myArray[myArray.length-1])
+                                 {
+                                   AudioFlag = 3;
+                                 }
+
+                                 if(currentAverageHeight < currentTodayHeight && ui.value != myArray[myArray.length-1])
+                                 {
+                                   AudioFlag = 4;
+                                 }
+
+                                 if(currentAverageHeight == currentTodayHeight && ui.value != myArray[myArray.length-1])
+                                 {
+                                   AudioFlag = 5;
+                                 }
+
+                                 if(currentAverageHeight > currentTodayHeight && ui.value != myArray[myArray.length-1])
+                                 {
+                                   AudioFlag = 6;
+                                 }
+
+                             }
+                             }).find('.ui-slider-handle').append(tooltip);
+
+$('#slider1').slider("value", 19);
+
+  } // end of INIT
+
+  function SetCanvasBackground(position)
+  {
+    initCanvas(position);
+    var canvas = document.getElementById('dataCanvas');
+    document.getElementById('slider1').style.background = "url(" + canvas.toDataURL() + ")";
+  }
+
+  function ResetPrototype()
+  {
+    if(AudioFlag == 0)
+  {
+    WelcomeAudio.play();
+    $('#averageTeeth').animate({height : tavg});
+    $('#todayTeeth').animate({height : tend});
+
+  }
+
+  if(AudioFlag == 1)
+  {
+    moretoday.play();
+  }
+
+  if(AudioFlag == 2)
+  {
+    sametoday.play();
+  }
+
+  if(AudioFlag == 3)
+  {
+    lesstoday.play();
+  }
+
+  if(AudioFlag == 4)
+  {
+    moreother.play();
+  }
+
+  if(AudioFlag == 5)
+  {
+    sameother.play();
+  }
+
+  if(AudioFlag == 6)
+  {
+    lessother.play();
+  }
+
+  }
+
+
+  function calculateAverage(currentIndex)
+  {
+
+    console.log("current index --> "+ currentIndex);
+    var sum = 0;
+    var average = 0;
+    for (var i = 0; i <= currentIndex; i ++ )
+    {
+      var  percentage = myArray[i];
+      sum=sum+percentage;
+    }
+    average = sum/ (currentIndex+1);
+
+     if(AudioFlag == 0)
+     {
+       tavg = (average*0.07).toString()+'%';
+       $('#averageTeeth').animate({height : tavg});
+     }
+
+    return average;
+  }
+/*
+ http://stackoverflow.com/questions/3397334/use-canvas-as-a-css-background
+ http://api.jqueryui.com/slider/
+ */
+  function initCanvas(position){
+
+    var xpos = 0,xpos1 = 0,xpos2 = 0;
+    var ypos = 0,ypos1 = 0,ypos2 = 0;
+    var canvas = document.getElementById('dataCanvas');
+    var ctx = canvas.getContext('2d');
+    var arrayCount = myArray.length;
+    var xlength =
+    (document.getElementById('dataCanvas').width / myArray.length)+1;
+    var ymax =  document.getElementById('dataCanvas').height;
+
+    var selected = 'rgba(0,206,209,0.20)';
+    var unselected = 'rgba(0,195,225,1)';
+
+    ctx.lineWidth=2;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = selected;
+    ctx.strokeStyle= selected;
+    ctx.fill();
+
+  /*  closed graph -  start and end at same point - helps in coloring*/
+    ctx.beginPath();
+    xpos=0;
+
+    /* because, the 0,0 is top right corner, so the graph should be inverted */
+    ypos = ymax - [(myArray[0] * 50)/ 100];
+    ctx.quadraticCurveTo(xpos,ymax, xpos, ypos);
+    xpos1=xpos;
+    ypos1 = ypos;
+    xpos2=xpos2+xlength;
+    for(var i=1; i < myArray.length; i++)
+    {
+      if(i==position)
+      {
+        ctx.quadraticCurveTo(xpos2,ypos2, xpos2, ymax);
+        console.log("xpos ::" + xpos2 + " ymax :: "+ ymax );
+        ctx.closePath();
+
+        ctx.fillStyle = unselected;
+        ctx.strokeStyle = unselected;
+        ctx.fill();
+        xpos1=xpos2;
+        ypos1 = ymax;
+        ctx.beginPath();
+      }
+      else {
+        ctx.fillStyle = selected;
+        ctx.strokeStyle = selected;
+      }
+       ypos2 = ymax - [(myArray[i] * 50)/ 100];
+       ctx.quadraticCurveTo(xpos1, ypos1, xpos2,ypos2);
+       xpos2=xpos2+xlength;
+       xpos1=xpos2;
+       ypos1=ypos2;
+
+     }
+      xpos2=xpos2-xlength;
+      /* line to bottom */
+      ctx.quadraticCurveTo(xpos2,ypos2,xpos2,ymax);
+      ctx.lineTo(0,ymax);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+  }
+
+  function initCanvasInit(){
+
+    var xpos = 0,xpos1 = 0,xpos2 = 0;
+    var ypos = 0,ypos1 = 0,ypos2 = 0;
+    var canvas = document.getElementById('dataCanvasInit');
+    var ctx = canvas.getContext('2d');
+    var arrayCount = myArray.length;
+    var xlength =
+    (document.getElementById('dataCanvasInit').width / myArray.length)+1;
+    var ymax =  document.getElementById('dataCanvasInit').height;
+
+    ctx.lineWidth=2;
+
+    ctx.fillStyle =  'rgb(0,206,209)';
+    ctx.strokeStyle=  'rgb(0,206,209)';
+    ctx.fill();
+
+  /*  closed graph -  start and end at same point - helps in coloring*/
+    ctx.beginPath();
+    xpos=0;
+
+    /* because, the 0,0 is top right corner, so the graph should be inverted */
+    ypos = ymax - [(myArray[0] * 50)/ 100];
+    ctx.quadraticCurveTo(xpos,ymax, xpos, ypos);
+    xpos1=xpos;
+    ypos1 = ypos;
+    xpos2=xpos2+xlength;
+    for(var i=1; i < myArray.length; i++)
+    {
+       ypos2 = ymax - [(myArray[i] * 50)/ 100];
+       ctx.quadraticCurveTo(xpos1, ypos1, xpos2,ypos2);
+       xpos2=xpos2+xlength;
+       xpos1=xpos2;
+       ypos1=ypos2;
+
+     }
+      xpos2=xpos2-xlength;
+      /* line to bottom */
+      ctx.quadraticCurveTo(xpos2,ypos2,xpos2,ymax);
+      ctx.lineTo(0,ymax);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+  }
+
+</script>
+
+</head>
+<body onload='init();'>
+
+<div id = 'beaver'>
+   <img id='beaverImage' width="100%"  height="100%" img src="images/Beaver.png" alt="beaver"> </img>
+   <div id = 'averageTeeth'> </div>
+   <div id = 'todayTeeth'> </div>
+    <img id='audioButton' img src="images/audio.png" alt=""> </img>
+
+ </div>
+
+   <div id = 'dataplot'>
+     <canvas id='dataCanvas' width ='400' height='50'></canvas>
+     <canvas id='dataCanvasInit' width ='400' height='50'></canvas>
+
+     <div id="slider1"></div>
+
+   </div>
+<p id ='startDate' > </p>
+
+
+</body>
+</html>
